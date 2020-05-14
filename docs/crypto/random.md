@@ -1,6 +1,6 @@
 ## 一文详解编程中的随机数
 
-随机数，相信大家都不陌生，网上有很多生成随机数的小工具。直观来看，随机数就是一串杂乱无章的数字、字母、符合组合, 比如`pSTkKIiZMOlDxOgwpIQGdlZwrJCRiHRK`。但随机数真的就随机吗？真的就无法预测吗？什么场景下可以用什么方式来生成随机数呢? 这篇文章将为大家介绍随机数的类型，在程序中如何使用随机数，以及随机数在密码学中使用场景。希望能尽量地将在开发过程中需要用到的随机数知识都收纳在这里，方便大家进行查阅！
+随机数，相信大家都不陌生，网上有很多生成随机数的小工具。直观来看，随机数就是一串杂乱无章的数字、字母、以及符号的组合, 比如`pSTkKIiZMOlDxOgwpIQGdlZwrJCRiHRK`。但随机数真的就随机吗？真的就无法预测吗？什么场景下可以用什么方式来生成随机数呢? 这篇文章将为大家介绍随机数的类型，在程序中如何使用随机数，以及随机数在密码学中使用场景。希望能尽量地将在开发过程中需要用到的随机数知识都收纳在这里，方便大家进行查阅！
 
 #### 随机数的类型
 
@@ -72,7 +72,7 @@ PyDyY47Ah5
 
 ```java
 public static String ALPHA = "abcdefghijkllmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";   
-public static String generate_alphaString_using_Random(int length) {
+public static String generate_alphabetic_using_Random(int length) {
         Random random = new Random();
         StringBuffer buffer = new StringBuffer();
         int bound = ALPHA.length();
@@ -85,15 +85,15 @@ public static String generate_alphaString_using_Random(int length) {
 
 - RandomStringUtil
 
-如果大家只是偶尔需要用到随机字符串，不要什么特别的随机字符集的话，那么可以用Apache Common提供的RandomStringUtil辅助类，可以方便地生成常见的随机字符串：
+如果大家只是偶尔需要用到随机字符串，不要什么特别的随机字符集的话，那么可以用Apache Common提供的RandomStringUtil 辅助类，可以方便地生成常见的随机字符串：
 
 ```java
-    public static String generate_alphaString_using_RandomUtils(int length){
+    public static String generate_alphabetic_using_RandomUtils(int length){
        return RandomStringUtils.randomAlphabetic(length);
     }
 ```
 
-作为Apache Common的良心包，一般都会有一系列的实现方法可供选择，比如：
+作为一款良心包，Apache Common一般都会有一系列的实现方法可供选择，比如：
 
 ![RandomStringUtils](.\image\random02.png)
 
@@ -136,7 +136,7 @@ public static String generate_alphaString_using_Random(int length) {
 
 ```java
 public static String ALPHA = "abcdefghijkllmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";   
-public static String generate_alphaString_using_ThreadLocalRandom(int length) {
+public static String generate_alphabetic_using_ThreadLocalRandom(int length) {
         Random random = ThreadLocalRandom.current();
         StringBuffer buffer = new StringBuffer();
         int bound = ALPHA.length();
