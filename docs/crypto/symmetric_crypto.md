@@ -13,7 +13,7 @@ TL;DR: 前面几篇文章我们介绍了密码学的两大基本单元 - 随机�
 
 这篇文章我们主要介绍对称密码加密算法。对称加密算法可以简单地概括为通过一个算法和一个密钥，对明文进行处理，变成一个无规则无意义数据的算法。明文在算法里面叫plaintext，密钥叫做key，而最终生成的密文叫ciphertext. 下图形象地描述了对称机密算法的操作：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric.png)
+![](.\image\symmetric.png)
 
 我们也可以用如下的公式来简单表述对称加解密算法：
 
@@ -75,7 +75,7 @@ TL;DR: 前面几篇文章我们介绍了密码学的两大基本单元 - 随机�
 - 对于每一个明文块通过加密器进行加密
 - 加个明文块加密的结果合并起来，成为最终的明文C
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric00.png)
+![](.\image\symmetric00.png)
 
 #### Padding
 
@@ -118,7 +118,7 @@ ECB模式时最简单的一种迭代模式。它的加密过程如下：
 
 
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric02.png)
+![](.\image\symmetric02.png)
 
 ECB的优点是： 简单，由于每一块都是独立加密运算的，可以并行运算，并且误差不会被传递
 
@@ -137,7 +137,7 @@ CBC是一种比较常见的迭代模式，基本解决了ECB模式的安全问�
 
 下图展示CBC的迭代模式：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric03.png)
+![](.\image\symmetric03.png)
 
 CBC模式的优点是：引入了IV，如果采用随机IV，可以做到同样的明文和密钥，最终得到的明文不一样，更为安全一些。初始化向量IV是对着密文一起发送给解密者的，IV的长度是跟密码块的长度一致，一般作为第一个密码块传递给解密者
 
@@ -156,7 +156,7 @@ CTR模式在迭代的时候，类似于流密码的运行模式。每次迭代�
 
 下图展示了CTR模式的大致流程：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric04.png)
+![](.\image\symmetric04.png)
 
 CTR的优点是:  引入Nonce，随机的Nonce可以确保同样的明文和密钥，可以产生不同的密文。由于密钥流按照一定的规则生成，所以个加密单元可以预先知道所有的输入 密钥， Nonce，明文块，那么就可以并行进行处理。 CTR每一块里面采用流加密算法，将明文与对应的流密钥位进行异或XOR操作就行，所以不需要补位填充
 
@@ -172,19 +172,19 @@ CTR的优点是:  引入Nonce，随机的Nonce可以确保同样的明文和密�
 
 字节替换是将明文的字符根据一定的规则替换成另外的字符，根据什么规则呢？一般会有与明文块大小一致的二维常量数组，这个二维常量数组也叫替换表 Substation Box, 简称S盒。 算法实现根据明文的位置从S盒中找到对应的字符替换掉明文字符。比如AES128的块长度是16字节，那么它的S盒就是一个4x4的二维数组。如下图：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric05.png)
+![](.\image\symmetric05.png)
 
 ##### 2) 行位移
 
 替换还不够，这里还要来个行位移，怎么弄呢？就是每一行的元素 “预备起”，按照要求向左或者向右移动几位。比如第0行不动，第1行左移1位，第2行左移2位，第3行左移3位。下图描述了这个过程：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric06.png)
+![](.\image\symmetric06.png)
 
 ##### 3) 列混淆
 
 行已经移动了，列也进行移动就显得很弱，那我就进行混淆吧。每一列都要与一个叫修补矩阵(fixed matrix)的二维数组常量进行相乘，得到对应的输出列：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric07.png)
+![](.\image\symmetric07.png)
 
 
 
@@ -192,7 +192,7 @@ CTR的优点是:  引入Nonce，随机的Nonce可以确保同样的明文和密�
 
 行也移动了，列也混淆了，我们还有一个真正的密钥没动呢！密钥也排成对应的矩阵，比如AES128的就排成一个4x4的矩阵。然后将输入数组的每一个字节与密钥矩阵的对应位置的值进行异或XOR操作，生成最终的输出值。下图描述了这个过程：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric08.png)
+![](.\image\symmetric08.png)
 
  这里要注意一下，这里的密钥不是原始128位的密钥，而是由原始128位的密钥扩展出来的子密钥。上面说了AES128的加密迭代是10轮，那么就需要从原始128位的密钥迭代生成10个128位的子密钥。下面描述了一个64bit密钥的迭代过程：
 
@@ -204,7 +204,7 @@ CTR的优点是:  引入Nonce，随机的Nonce可以确保同样的明文和密�
 
 下图大致描述了这个过程：
 
-![](D:\workspace\github\documentation\docs\crypto\image\symmetric09.png)
+![](.\image\symmetric09.png)
 
 ### 块密码算法的种类
 
