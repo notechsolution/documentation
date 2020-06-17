@@ -48,11 +48,17 @@ TL;DR: 上一篇文章我们介绍了对称加密算法，其最主要的特点�
 
 ### ECC公私钥对的生成
 
-#### 
+```Exception in thread "main" java.security.InvalidKeyException: Illegal key size or default parameters```
+
+https://stackoverflow.com/questions/24907530/java-security-invalidkeyexception-illegal-key-size-or-default-parameters-in-and/24907555
+
+
 
 ## 密钥协商算法 DH
 
+https://gist.github.com/ymnk/fec39e033394ee2ec47c
 
+https://gist.github.com/wuyongzheng/0e2ed6d8a075153efcd3
 
 ## 非对称密钥算法在Java中的实践
 
