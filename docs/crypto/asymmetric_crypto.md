@@ -51,7 +51,7 @@ n、e、d分别称之为:
 
 有了公私钥，我们就可以开始来看加解密的原理了。我们定义明文消息为M，而加密的内容为C，那么加密的过程为：计算明文消息的e次幂，然后与n求模： 
 
- 
+
 $$
 C= M^e\quad mod\quad n
 $$
@@ -299,7 +299,31 @@ $$
 
 
 
+## RSA Padding
 
+RSA的安全问题： 如果公钥的key长度为目前最长的4096位，但是指数e=3的情况下，就会出现下面的问题：
+
+- `"No"` => `ASCII("No")` => `0x4E 0x6F` => `m=0x4E6F`.
+- `c = POW(0x4E6F, 3) MOD n ` => `c = 0x75CCE07084F MOD n`
+  - We know that `n` is a 4096-bit number (given) therefore it's larger than `0x75CCE07084F`, so `c=75CCE07084F`.
+- 这时有人收到消息，直接开3次的平方根，就可以得到20079，转成十六进制，就可以得到`4E4F`, 从而得到原始消息 `No`
+
+https://security.stackexchange.com/questions/183179/what-is-rsa-oaep-rsa-pss-in-simple-terms/183330#183330 
+
+
+
+`00 02 [a bunch of non-zero random bytes] 00 [the message]`
+
+
+
+还有问题就是 相同的消息加密出来的内容一样的
+
+
+
+所以我们需要补位
+
+- PKCS V1_5
+- OEAP
 
 ## ECC 算法
 
