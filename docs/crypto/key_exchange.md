@@ -68,7 +68,11 @@ DHKE算法的一个核心思想可以用`混色`实验来做一个比较直观�
 
 ### DHKE
 
-DHKE的核心思想跟上述的颜色混合实验的思想是高度一致的。首先我们来看一下DHKE背后的数学内容。DHKE的基本数学是模幂运算： (**ga**)**b** mod **p** = (**gb**)**a** mod **p**  .其中g,p,a,b 都是正整数。假设A = (ga) mod p, B = (gb) mod p, 我们我们就可以得到不用知道对方的a或者b的情况下，算出 (ga) b mod p = Ab mod P = Ba mod P.
+DHKE的核心思想跟上述的颜色混合实验的思想是高度一致的。首先我们来看一下DHKE背后的数学内容。DHKE的基本数学是模幂运算：
+
+$$ (g^a)^b \quad mod \quad p = (g^b)^a \quad mod \quad p$$
+
+  .其中g,p,a,b 都是正整数。假设A = (ga) mod p, B = (gb) mod p, 我们我们就可以得到不用知道对方的a或者b的情况下，算出 (ga) b mod p = Ab mod P = Ba mod P.
 
 这里我们再来说清楚这些字母都代表什么？ 
 
