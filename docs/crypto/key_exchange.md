@@ -26,7 +26,7 @@
 
 DHKE全称是 Differ-Hellman Key Exchange, 是一种1976年就设计出来的公开密钥算法，只不过这种算法不提供直接的加密或者解密，而是用来进行密钥的传输和分配。
 
-### 混色实验
+### 混色实验[^1]
 
 DHKE算法的一个核心思想可以用`混色`实验来做一个比较直观的展示。现在我们来介绍这个`混色`实验。
 
@@ -70,18 +70,118 @@ DHKE算法的一个核心思想可以用`混色`实验来做一个比较直观�
 
 DHKE的核心思想跟上述的颜色混合实验的思想是高度一致的。首先我们来看一下DHKE背后的数学内容。DHKE的基本数学是模幂运算：
 
-$$ (g^a)^b \quad mod \quad p = (g^b)^a \quad mod \quad p$$
+$$ (g^a)^b \ mod \ p = (g^b)^a \ mod \ p$$
 
-  .其中g,p,a,b 都是正整数。假设A = (ga) mod p, B = (gb) mod p, 我们我们就可以得到不用知道对方的a或者b的情况下，算出 (ga) b mod p = Ab mod P = Ba mod P.
+ 其中g,p,a,b 都是正整数。假设$A = (g^a)\ mod\ p$, $B = (g^b)\ mod \ p$, 我们我们就可以在不知道对方的a或者b的情况下，算出 $(g^a)^b\ mod\ p = A^b\ mod\ p = B^a\ mod\ p$.
 
 这里我们再来说清楚这些字母都代表什么？ 
 
 - 首先 p 跟 g可以公开的两个数，p是质数，一般要512位以上，而g是一个小整数，一般是2. 
-- a是发起方的密钥，这里是Alice的密钥
-- b是对方的密钥，这里是Bob的密钥
-- A = ga
+
+- a是发起方的密钥，这里是Alice的密钥，而$A = (g^a)\ mod\ p$ 则是Alice的公钥
+
+- b是对方的密钥，这里是Bob的密钥，而$B = (g^b)\ mod \ p$ 这是Bob的公钥
+
+- Alice推算出来的shareKey 为 $(g^a)^b \ mod \ p$
+
+- Bob推算出来的shareKey为 $(g^b)^a \ mod \ p$
+
+  
+
+有了上面这个数学基础之后，我们可以来看DHKE协议是怎么工作的：
+
+- 首先Alice选择一个g和p，以及自己的私钥a，然后算出自己的公钥 $A = g^a \ mod\ p$
+- Alice把A,p,g 通过公开网络发送给Bob
+- Bob也产生一个自己的私钥b，然后根据拿到的p, g，算出自己的公钥 $B = g^b \ mod\ p$
+- Bob把自己的公钥B通过公开网络发送给Alice
+- 这时Alice和Bob都拿到对方的公钥，于是可以计算出shareKey
+  - Alice: $sharedKey = B^a \ mod\ p$
+  - Bob: $sharedKey = A^b\ mod\ p$  
+
+下图描述了这么一个过程：
+
+![key-exchange-Diffie-Hellman-Protocol](.\image\key-exchange-Diffie-Hellman-Protocol.png)
+
+至此我们就可以在不安全的网络环境下，通信双方实现密钥协商的过程。
+
+### DHKE在Java中的实践
+
+ 下面我们用Java代码来实现DHKE的过程：
+
+```java
+public class DHUtil {
+
+  static Logger logger = LoggerFactory.getLogger("DHUtil");
+
+  public static void main(String[] args)
+      throws Exception {
+    BigInteger p = BigInteger.probablePrime(512, new Random());
+    BigInteger g = new BigInteger("2");
+    KeyPair keyPairA = generateDHKeyPair(p, g);
+    KeyPair keyPairB = generateDHKeyPair(p, g);
+
+    String publicKeyA = new String(Base64.getEncoder().encode(keyPairA.getPublic().getEncoded()));
+    String publicKeyB = new String(Base64.getEncoder().encode(keyPairB.getPublic().getEncoded()));
+    BigInteger publicKeyAY = ((DHPublicKey) keyPairA.getPublic()).getY();
+    BigInteger publicKeyBY = ((DHPublicKey) keyPairB.getPublic()).getY();
+
+    logger.info("publicKeyA, format {},  {}", keyPairA.getPublic().getFormat(), publicKeyA);
+    logger.info("publicKeyB, format {},  {}", keyPairB.getPublic().getFormat(), publicKeyB);
+    logger.info("publicKeyA Y,  {}", publicKeyAY);
+    logger.info("publicKeyB Y,  {}", publicKeyBY);
+//
+    byte[] secretA = computeSharedSecret(keyPairA.getPrivate(), publicKeyBY.toByteArray(), p, g);
+    String secretAString = new String(Base64.getEncoder().encode(secretA));
+
+    byte[] secretB = computeSharedSecret(keyPairB.getPrivate(), publicKeyAY.toByteArray(), p, g);
+    String secretBString = new String(Base64.getEncoder().encode(secretB));
+
+    logger.info("secret A equals to secret B: {}", secretAString.equals(secretBString));
+  }
+
+  public static KeyPair generateDHKeyPair(BigInteger p, BigInteger g)
+      throws NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+    DHParameterSpec dhParameterSpec = new DHParameterSpec(p, g);
+    KeyPairGenerator keyGenerator = KeyPairGenerator.getInstance("DiffieHellman");
+    keyGenerator.initialize(dhParameterSpec);
+    return keyGenerator.generateKeyPair();
+  }
+
+  public static byte[] computeSharedSecret(PrivateKey myPrivateKey, byte[] hisPublicKeyByte,
+      BigInteger p, BigInteger g)
+      throws NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
+    KeyFactory keyFactory = KeyFactory.getInstance("DiffieHellman");
+    BigInteger hisPublicKeyY = new BigInteger(1, hisPublicKeyByte);
+    PublicKey hisPublicKey = keyFactory.generatePublic(new DHPublicKeySpec(hisPublicKeyY, p, g));
+
+    KeyAgreement keyAgreement = KeyAgreement.getInstance("DiffieHellman");
+    keyAgreement.init(myPrivateKey);
+    keyAgreement.doPhase(hisPublicKey, true);
+    byte[] secret = keyAgreement.generateSecret();
+    logger.info("secret {} generated by privateKey {} with hisPublicKey {}", new String(Base64.getEncoder().encode(secret)),
+        new String(Base64.getEncoder().encode(myPrivateKey.getEncoded())),
+        hisPublicKeyY);
+    return secret;
+  }
+```
+
+执行这个程序可以看到如下的输出：
+
+```verilog
+09:01:59.588 [main] INFO DHUtil - publicKeyA, format X.509,  MIGeMFcGCSqGSIb3DQEDATBKAkEAsMVOj0kSL1sahj1drMXxkLMXuWFPk6cVpzgl6y9YYC78lahsiuBopR3gi+5a//+4toJi67cotEgZ1qiBLa7cWQIBAgICAYADQwACQEXlVq1nqdYc6DsNhVM2Q4kTvyURfTQ7hoKThmxM/RFkh250VT3KZu0oToU/cJ2BoF98478TYex/COk+71OjXws=
+09:01:59.591 [main] INFO DHUtil - publicKeyB, format X.509,  MIGeMFcGCSqGSIb3DQEDATBKAkEAsMVOj0kSL1sahj1drMXxkLMXuWFPk6cVpzgl6y9YYC78lahsiuBopR3gi+5a//+4toJi67cotEgZ1qiBLa7cWQIBAgICAYADQwACQF2ZXEW5XBVn4axuPSnHrmOW1Sp4CSjkt+saP0QDy1Hmn0HtX0AMuewPJG4p9kbMZS0+DDDCPh+O7bsAYfakZZU=
+09:01:59.591 [main] INFO DHUtil - publicKeyA Y,  3660742903935543138340844783893407768074467034614604813879913560329513058452449951529057767433562802574483137410428594544885303740866499524026390160826123
+09:01:59.591 [main] INFO DHUtil - publicKeyB Y,  4902180763320310394510982200977225381779825174323107369251201843502834164278055264473286139839124487961551802995085460566799994538103539244890003081553301
+09:01:59.704 [main] INFO DHUtil - secret ofRXrtOfHWbiyKH53LwEvg/wpTzoHBOaDgbTaYg0m5kckWtx+ekBtpim+5/DpOduno6SosrZJiDUgXcgMtrdEg== generated by privateKey MIGRAgEAMFcGCSqGSIb3DQEDATBKAkEAsMVOj0kSL1sahj1drMXxkLMXuWFPk6cVpzgl6y9YYC78lahsiuBopR3gi+5a//+4toJi67cotEgZ1qiBLa7cWQIBAgICAYAEMwIxANGxLNL/rXPxcCErbRLYzNEcGNq0SbWW+Sly88bCh3PeRH+PdUmM7WMTuzGDUM4tzg== with hisPublicKey 4902180763320310394510982200977225381779825174323107369251201843502834164278055264473286139839124487961551802995085460566799994538103539244890003081553301
+09:01:59.704 [main] INFO DHUtil - secret ofRXrtOfHWbiyKH53LwEvg/wpTzoHBOaDgbTaYg0m5kckWtx+ekBtpim+5/DpOduno6SosrZJiDUgXcgMtrdEg== generated by privateKey MIGRAgEAMFcGCSqGSIb3DQEDATBKAkEAsMVOj0kSL1sahj1drMXxkLMXuWFPk6cVpzgl6y9YYC78lahsiuBopR3gi+5a//+4toJi67cotEgZ1qiBLa7cWQIBAgICAYAEMwIxAP5sl3GDhNt5mqHjknrdUOboy+YSzT9wAZPCvwEWGoVA0hw4X3CYn9JTXiG4QCswag== with hisPublicKey 3660742903935543138340844783893407768074467034614604813879913560329513058452449951529057767433562802574483137410428594544885303740866499524026390160826123
+09:01:59.704 [main] INFO DHUtil - secret A equals to secret B: true
+```
 
 
+
+## ECDH
+
+ECDH 全名叫 Elliptic-Curve Diffie-Hellman, 也是一种密钥协商算法。主要的做法也是双方都可以有自己的一对椭圆曲线算法的公私钥对，来进行密钥协商。ECDH也是按照DHKE协议进行密钥协商，只不过DHKE是基于模幂相等数学基础，而ECDH是基于曲线打点的数学基础。具体的ECDH的介绍我们可以在椭圆曲线算法的时候在一起介绍！
 
 
 
